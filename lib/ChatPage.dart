@@ -112,34 +112,34 @@ class _ChatPageState extends State<ChatPage> {
                 },
               ),
             ),
-            // Padding(
-            //   padding: const EdgeInsets.all(8),
-            //   child: TextFormField(
-            //     controller: controller,
-            //     maxLines: null,//改行できる
-            //     textInputAction: TextInputAction.send, //Enterで送信
-            //     decoration: InputDecoration(
-            //       enabledBorder: OutlineInputBorder(
-            //         borderRadius: BorderRadius.circular(8),
-            //         borderSide: const BorderSide(color: Colors.amber),  
-            //       ),
-            //       focusedBorder: OutlineInputBorder(
-            //         borderRadius: BorderRadius.circular(8),
-            //         borderSide: const BorderSide(
-            //           color: Colors.amber,
-            //           width: 2,
-            //         ),
-            //       ),
-            //       fillColor: Colors.amber[50],
-            //       filled: true,  
-            //     ),
-            //     onFieldSubmitted: (text) {
-            //       sendPost(text);
-            //       controller.clear();
-            //       FocusScope.of(context).unfocus();
-            //     },
-            //   ),
-            // ),
+            Padding(
+              padding: const EdgeInsets.all(8),
+              child: TextFormField(
+                controller: controller,
+                maxLines: null,//改行できる
+                textInputAction: TextInputAction.send, //Enterで送信
+                decoration: InputDecoration(
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Colors.amber),  
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(
+                      color: Colors.amber,
+                      width: 2,
+                    ),
+                  ),
+                  fillColor: Colors.amber[50],
+                  filled: true,  
+                ),
+                onFieldSubmitted: (text) {
+                  sendPost(text);
+                  controller.clear();
+                  FocusScope.of(context).unfocus();
+                },
+              ),
+            ),
           ],
         ),
       ),
