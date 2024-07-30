@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 //import 'firebase_options.dart';
-import 'ViewPage.dart';
+import 'ChatPage.dart';
 //import 'package:http/http.dart' as http;
-//import 'post.dart';
+import 'post.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-//import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 void main() async{
   // 最初に表示するWidget
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,7 +31,7 @@ class ChatApp extends StatelessWidget {
     } else {
       return MaterialApp(
         theme: ThemeData(),
-        home: ViewPage(),
+        home: ChatPage(),
       );
     } 
   }
@@ -109,7 +109,7 @@ class _LoginPageState extends State<LoginPage> {
                       // チャット画面に遷移＋ログイン画面を破棄
                       await Navigator.of(context).pushReplacement(
                         MaterialPageRoute(builder: (context) {
-                          return ViewPage();
+                          return ChatPage();
                         }),
                       );
                     } catch (e) {
@@ -133,7 +133,7 @@ class _LoginPageState extends State<LoginPage> {
                       // チャット画面に遷移＋ログイン画面を破棄
                       await Navigator.of(context).pushReplacement(
                         MaterialPageRoute(builder: (context) {
-                          return ViewPage();
+                          return ChatPage();
                         }),
                       );
                     } catch (e) {
@@ -153,12 +153,12 @@ class _LoginPageState extends State<LoginPage> {
                     // ログインが成功すると FirebaseAuth.instance.currentUser にログイン中のユーザーの情報が入ります
                     print(FirebaseAuth.instance.currentUser?.displayName);
 
-                     // ログインに成功したら ViewPage に遷移します。
+                     // ログインに成功したら ChatPage に遷移します。
                      // 前のページに戻らせないようにするにはpushAndRemoveUntilを使います。
                     if (mounted) {
                       Navigator.of(context).pushAndRemoveUntil(
                         MaterialPageRoute(builder: (context) {
-                          return ViewPage();
+                          return ChatPage();
                         }),
                         (route) => false,
                       );
@@ -173,3 +173,12 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
+
+final postsReference = FirebaseFirestore.instance.collection('posts').withConverter<Post>( // <> ここに変換したい型名をいれます。今回は Post です。
+  fromFirestore: ((snapshot, _) { // 第二引数は使わないのでその場合は _ で不使用であることを分かりやすくしています。
+    return Post.fromFirestore(snapshot); // 先ほど定期着した fromFirestore がここで活躍します。
+  }),
+  toFirestore: ((value, _) {
+    return value.toMap(); // 先ほど適宜した toMap がここで活躍します。
+  }),
+);

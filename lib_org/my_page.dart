@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'main.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'json_upload.dart';
 
 class MyPage extends StatelessWidget {
   const MyPage({super.key});
@@ -64,6 +65,7 @@ class MyPage extends StatelessWidget {
                   },
                   child: const Text('サインアウト'),
                 ),
+                PostDataButton()
               ],
             ),
           ],

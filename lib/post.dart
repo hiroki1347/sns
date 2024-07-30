@@ -1,66 +1,45 @@
-//import 'package:flutter/material.dart';
-//import 'package:firebase_auth/firebase_auth.dart';
-//import 'package:firebase_core/firebase_core.dart';
-//import 'firebase_options.dart';
-//import 'ChatPage.dart';
-//import 'package:http/http.dart' as http;
-//import 'package:post.dart';
-//import 'main.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-//import 'package:image_picker/image_picker.dart';
+//import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Post {
+  final int createdAt;
+  final String posterName;
+  final String posterImageUrl;
+  final String posterId;
+  final String text;
+  final String imageName;
+  final int postId;
+
   Post({
-    required this.text,
     required this.createdAt,
     required this.posterName,
     required this.posterImageUrl,
     required this.posterId,
-    required this.reference
+    required this.text,
+    required this.imageName,
+    required this.postId,
   });
 
-  factory Post.fromFirestore(DocumentSnapshot<Map<String, dynamic>> snapshot) {
-    final map = snapshot.data()!; // data() の中には Map 型のデータが入っています。
-    // data()! この ! 記号は nullable な型を non-nullable として扱うよ！ という意味です。
-    // data の中身はかならず入っているだろうという仮説のもと ! をつけています。
-    // map データが得られているのでここからはいつもと同じです。
+  factory Post.fromJson(Map<String, dynamic> json) {
     return Post(
-      text: map['text'],
-      createdAt: map['createdAt'],
-      posterName: map['posterName'],
-      posterImageUrl: map['posterImageUrl'],
-      posterId: map['posterId'],
-      reference: snapshot.reference, // 注意。reference は map ではなく snapshot に入っています。
+      createdAt: json['createdAt'] ,
+      posterName: json['posterName'],
+      posterImageUrl: json['posterImageUrl'],
+      posterId: json['posterId'],
+      text: json['text'],
+      imageName: json['imageName'],
+      postId: json['postId'],
     );
   }
 
-   Map<String, dynamic> toMap() {
-     return {
-       'text': text,
-       'createdAt': createdAt,
-       'posterName': posterName,
-       'posterImageUrl': posterImageUrl,
-       'posterId': posterId,
-       // 'reference': reference, reference は field に含めなくてよい
-       // field に含めなくても DocumentSnapshot に reference が存在するため
-     };
-   }
-
-  /// 投稿文
-  final String text;
-
-  /// 投稿日時
-  final Timestamp createdAt;
-
-  /// 投稿者の名前
-  final String posterName;
-
-  /// 投稿者のアイコン画像URL
-  final String posterImageUrl;
-
-  /// 投稿者のユーザーID
-  final String posterId;
-
-  /// Firestoreのどこにデータが存在するかを表すpath情報
-  final DocumentReference reference;
+  Map<String, dynamic> toJson() {
+    return {
+      'createdAt': createdAt,
+      'posterName': posterName,
+      'posterImageUrl': posterImageUrl,
+      'posterId': posterId,
+      'text': text,
+      'imageName': imageName,
+      'postId': postId,
+    };
+  }
 }

@@ -42,17 +42,17 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyC3G5cFCJqBcCov7UyRzevUORiww5qiUq4',
-    appId: '1:757551575021:web:181d5ef40abcd25b1281e4',
+    appId: '1:757551575021:web:1cd167727c7c27c41281e4',
     messagingSenderId: '757551575021',
     projectId: 'test-3fa24',
     authDomain: 'test-3fa24.firebaseapp.com',
     storageBucket: 'test-3fa24.appspot.com',
-    measurementId: 'G-0PG5MRF8WB',
+    measurementId: 'G-6YM3XSFQ31',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyAu6eWt_t7tNM9WkuSuy8VR46kOgApfaHw',
-    appId: '1:757551575021:android:272fa375d8f668ea1281e4',
+    appId: '1:757551575021:android:697fe835acdd031a1281e4',
     messagingSenderId: '757551575021',
     projectId: 'test-3fa24',
     storageBucket: 'test-3fa24.appspot.com',
@@ -60,34 +60,34 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyCCf-peDkN4nXXLXr696N7giCnceZe9Tfo',
-    appId: '1:757551575021:ios:99840d5b4cf79ee41281e4',
+    appId: '1:757551575021:ios:e2a34eb98b3876931281e4',
     messagingSenderId: '757551575021',
     projectId: 'test-3fa24',
     storageBucket: 'test-3fa24.appspot.com',
-    androidClientId: '757551575021-2q6mhqemrbd74npnj9976g3ntfuh4n1a.apps.googleusercontent.com',
-    iosClientId: '757551575021-b700kbmd3u3babbe6cro6rqc80p84r99.apps.googleusercontent.com',
-    iosBundleId: 'com.example.uploadPage',
+    androidClientId: '757551575021-edrdv3qcutt99tn7rua7c007los08q8l.apps.googleusercontent.com',
+    iosClientId: '757551575021-nfaid6m3oh152i596g8oitg6b1pq6du8.apps.googleusercontent.com',
+    iosBundleId: 'com.example.scroll',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyCCf-peDkN4nXXLXr696N7giCnceZe9Tfo',
-    appId: '1:757551575021:ios:99840d5b4cf79ee41281e4',
+    appId: '1:757551575021:ios:e2a34eb98b3876931281e4',
     messagingSenderId: '757551575021',
     projectId: 'test-3fa24',
     storageBucket: 'test-3fa24.appspot.com',
-    androidClientId: '757551575021-2q6mhqemrbd74npnj9976g3ntfuh4n1a.apps.googleusercontent.com',
-    iosClientId: '757551575021-b700kbmd3u3babbe6cro6rqc80p84r99.apps.googleusercontent.com',
-    iosBundleId: 'com.example.uploadPage',
+    androidClientId: '757551575021-edrdv3qcutt99tn7rua7c007los08q8l.apps.googleusercontent.com',
+    iosClientId: '757551575021-nfaid6m3oh152i596g8oitg6b1pq6du8.apps.googleusercontent.com',
+    iosBundleId: 'com.example.scroll',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
     apiKey: 'AIzaSyC3G5cFCJqBcCov7UyRzevUORiww5qiUq4',
-    appId: '1:757551575021:web:181d5ef40abcd25b1281e4',
+    appId: '1:757551575021:web:ce5011429f2e2c1c1281e4',
     messagingSenderId: '757551575021',
     projectId: 'test-3fa24',
     authDomain: 'test-3fa24.firebaseapp.com',
     storageBucket: 'test-3fa24.appspot.com',
-    measurementId: 'G-0PG5MRF8WB',
+    measurementId: 'G-Y1R8SH9Q0D',
   );
 
 }

@@ -1,25 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'json_data.dart';
 //import 'json_upload.dart';
 //import 'package:firebase_core/firebase_core.dart';
 //import 'firebase_options.dart';
+//import 'AddPostPage.dart';
 //import 'main.dart';
 import 'post.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+//import 'package:cloud_firestore/cloud_firestore.dart';
 //import 'my_page.dart';
+//import 'ChatField.dart';
 import 'package:intl/intl.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 
 //ポストの見た目
 class PostWidget extends StatelessWidget {
   const PostWidget({
     super.key,
     required this.post,
-    required this.created,
   });
 
-  final Timestamp created;
   final Post post;
 
   @override
@@ -50,7 +48,7 @@ class PostWidget extends StatelessWidget {
                     ),
                     Text(
                      // toDate() で Timestamp から DateTime に変換できます。
-                      DateFormat('MM/dd HH:mm').format(created.toDate()),
+                      DateFormat('MM/dd HH:mm').format(post.createdAt.toDate()),
                       style: const TextStyle(fontSize: 10),
                     ),
                   ],
@@ -59,31 +57,18 @@ class PostWidget extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Flexible(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(4),
-                              color: FirebaseAuth.instance.currentUser!.uid == post.posterId
-                                  ? Colors.amber[100]
-                                  :Colors.blue[100],
-                            ),
-                            child: Text(
-                              post.text,
-                              softWrap: true,
-                            ),
-                          ),
-                        //画像を表示
-                        if(post.imageName != "null") 
-                        CachedNetworkImage(
-                          imageUrl: 'http://192.168.0.200:3000/images/${post.imageName}'
-                          ),
-                      ],
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(4),
+                          color: FirebaseAuth.instance.currentUser!.uid == post.posterId ? Colors.amber[100] : Colors.blue[100],
+                        ),
+                        child: Text(
+                          post.text,
+                          softWrap: true,
+                        ),
+                      ),
                     ),
-                  ),
-                    //自分のpost
                     //編集
                     if (FirebaseAuth.instance.currentUser!.uid == post.posterId)
                       PopupMenuButton<String>(
@@ -97,8 +82,7 @@ class PostWidget extends StatelessWidget {
                                     initialValue: post.text,
                                     autofocus: true,
                                     onFieldSubmitted: (newText) {
-                                      //post.text　post.postidを用いて編集する
-                                      UPDATE().update(newText, post.postId);
+                                      post.reference.update({'text': newText});
                                       Navigator.of(context).pop();
                                     },
                                   ),
@@ -121,8 +105,7 @@ class PostWidget extends StatelessWidget {
                                     ),
                                     TextButton(
                                       onPressed: () {
-                                        //post.postidを用いて削除する関数を入れる
-                                        DELETE().delete(post.postId);
+                                        post.reference.delete();
                                         Navigator.of(context).pop();
                                       },
                                       child: const Text('Delete'),
@@ -145,7 +128,6 @@ class PostWidget extends StatelessWidget {
                         ],
                       ),
 
-                    //他人のpost
                     if (FirebaseAuth.instance.currentUser!.uid != post.posterId)
                       PopupMenuButton<String>(
                         onSelected: (value) {
