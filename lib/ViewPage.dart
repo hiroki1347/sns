@@ -27,7 +27,7 @@ class _ViewPageState extends State<ViewPage> {
   final controller = TextEditingController();
   List<Post> posts = [];
   List<Like> likelist = [];
-  late User_inf currentUser;
+  User_inf? currentUser;
   //Timer? timer;
   bool isLoading = true;
 
@@ -36,7 +36,7 @@ class _ViewPageState extends State<ViewPage> {
     super.initState();
     fetchPosts();
     _initialize().then((_) {
-      if (mounted) { // mounted をチェック
+      if (mounted) { 
         setState(() {
           isLoading = false;
         });
@@ -97,7 +97,7 @@ class _ViewPageState extends State<ViewPage> {
   @override
   Widget build(BuildContext context) {
 
-    if (isLoading) {
+    if (isLoading || currentUser == null) {
       return Scaffold(
         body: Center(child: CircularProgressIndicator()), // ローディングインジケーター
       );
@@ -116,7 +116,7 @@ class _ViewPageState extends State<ViewPage> {
               builder: (BuildContext context) {
                 return IconButton(
                   icon: CircleAvatar(
-                    backgroundImage: CachedNetworkImageProvider(currentUser.userImageUrl),
+                    backgroundImage: CachedNetworkImageProvider(currentUser!.userImageUrl),
                   ),
                   onPressed: () {
                     _scaffoldKey.currentState!.openDrawer();
@@ -152,10 +152,10 @@ class _ViewPageState extends State<ViewPage> {
                 children: [
                   CircleAvatar(
                     radius: 20.0,
-                    backgroundImage: NetworkImage(currentUser.userImageUrl),
+                    backgroundImage: NetworkImage(currentUser!.userImageUrl),
                   ),
                   SizedBox(height: 10.0),
-                  Text('${currentUser.user_name}'),
+                  Text('${currentUser!.user_name}'),
                 ],
               ),
               decoration: BoxDecoration(

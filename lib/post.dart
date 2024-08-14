@@ -1,5 +1,5 @@
 //String Url = "http://192.168.0.200:3000";
-String Url = "https://841f-106-184-155-122.ngrok-free.app";
+String Url = "https://2a0a-106-184-155-122.ngrok-free.app";
 
 class Post {
   final int createdAt;
