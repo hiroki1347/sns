@@ -4,6 +4,7 @@ import 'package:login_upload/post.dart';
 import 'main.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'json_data.dart';
+import 'package:image_picker/image_picker.dart';
 
 class settingPage extends StatefulWidget {
   const settingPage({super.key});
@@ -15,8 +16,9 @@ class settingPage extends StatefulWidget {
 class _SettingPageState extends State<settingPage> {
   final _usernameController = TextEditingController();
   late User_inf user_data_json;
-
   bool isLoading = true;
+  XFile? _image = null;
+  final imagePicker = ImagePicker();
 
   @override
   void initState() {
@@ -63,6 +65,36 @@ class _SettingPageState extends State<settingPage> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('ユーザー名の更新に失敗しました: $e')),
+      );
+    }
+  }
+
+  // ギャラリーから写真を取得するメソッド
+  Future getImageFromGallery() async {
+    final pickedFile = await imagePicker.pickImage(source: ImageSource.gallery);
+    setState(() {
+      if (pickedFile != null) {
+        _image = XFile(pickedFile.path);
+      }
+    });
+  }
+
+  Future<void> _updateUserImageUrl() async {
+    User_inf changedata = User_inf(
+      user_id: user_data_json.user_id,
+      user_name: user_data_json.user_name,
+      userImageUrl: user_data_json.userImageUrl,
+      createdAt: user_data_json.createdAt,
+    );
+
+    try {
+      User_data().edituserdata(changedata);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('ユーザーアイコンが更新されました')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('ユーザーアイコンの更新に失敗しました: $e')),
       );
     }
   }
@@ -120,6 +152,42 @@ class _SettingPageState extends State<settingPage> {
     );
   }
 
+  void _showSignoutDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('サインアウトしますか？'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // ダイアログを閉じる
+              },
+              child: const Text('いいえ'),
+            ),
+            TextButton(
+              onPressed: ()async {
+                // Google からサインアウト
+                await GoogleSignIn().signOut();
+                // Firebase からサインアウト
+                await FirebaseAuth.instance.signOut();
+                // SignInPage に遷移
+                // このページには戻れないようにします。
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (context) {
+                    return LoginPage();
+                  }),
+                  (route) => false,
+                );
+              },
+              child: const Text('はい'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
 
@@ -170,26 +238,15 @@ class _SettingPageState extends State<settingPage> {
               child: const Text('ユーザー名変更'),
             ),
 
+            //アイコン変更
             ElevatedButton(
               onPressed: _showUserIconDialog,
               child: const Text('アイコン変更'),
             ),
 
+            //サイアウト
             ElevatedButton(
-              onPressed: () async {
-                // Google からサインアウト
-                await GoogleSignIn().signOut();
-                // Firebase からサインアウト
-                await FirebaseAuth.instance.signOut();
-                // SignInPage に遷移
-                // このページには戻れないようにします。
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (context) {
-                    return LoginPage();
-                  }),
-                  (route) => false,
-                );
-              },
+              onPressed: _showSignoutDialog,
               child: const Text('サインアウト'),
             ),
           ],

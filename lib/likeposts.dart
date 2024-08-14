@@ -28,7 +28,7 @@ class _LikePostPageState extends State<LikePostPage> {
   List<Post> posts = [];
   List<Post> sortedPosts = [];
   List<Like> likelist = [];
-  List<String> followlist = [];
+  //List<String> followlist = [];
   bool isLoading = true;
   int likeCount = 0;
 
@@ -69,21 +69,29 @@ class _LikePostPageState extends State<LikePostPage> {
   
   Future<void> _initialize() async {
     try {
-
       await fetchPosts();
       // fetchLikedPosts 関数を呼び出して likelist を取得
       likelist = await LIKE().fetchLikedPosts(FirebaseAuth.instance.currentUser!.uid);
       likelist.sort((a, b) => b.likedAt.compareTo(a.likedAt));
-      sortedPosts = likelist.map((like) {
-        return posts.firstWhere((post) => post.postId == like.postId);
-      }).toList();
+
+      // sortedPosts = likelist.map((like) {
+      //   return posts.firstWhere((post) => post.postId == like.postId);
+      // }).toList();
+
+      sortedPosts = likelist
+        .map((like) => posts.where((post) => post.postId == like.postId).toList())
+        .expand((x) => x) // List<List<Post>> を List<Post> に展開
+        .toList();
+
+
       likeCount = sortedPosts.length;
+
 
       setState(() {
       });
     } catch (e) {
       // エラーハンドリングr
-      print('Error loading follow list: $e');
+      print('Error loading like list: $e');
     }
   }
 
@@ -107,7 +115,9 @@ class _LikePostPageState extends State<LikePostPage> {
             
             delegate: SliverChildBuilderDelegate(
               (context, index) {
-                //final post = posts[index];
+                if (sortedPosts.isEmpty) {
+                  return SizedBox.shrink();  // リストが空の場合は何も表示しない
+                }
                 final post = sortedPosts[index];
                 final created = Timestamp.fromMillisecondsSinceEpoch(post.createdAt * 1000);
                 if (likelist.any((like) => like.postId == post.postId)) {
@@ -121,8 +131,7 @@ class _LikePostPageState extends State<LikePostPage> {
                   return SizedBox.shrink();
                 }
               },
-              //childCount: posts.length,
-              childCount: likelist.length,
+              childCount: sortedPosts.length,
             ),
           ),
         ],
