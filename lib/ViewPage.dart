@@ -50,6 +50,9 @@ class _ViewPageState extends State<ViewPage> {
   //     fetchPosts();
   //   });
   // }
+  Future<void> _onRefresh() async {
+    await fetchPosts(); // 投稿を再取得
+  }
 
   @override
   void dispose() {
@@ -105,44 +108,48 @@ class _ViewPageState extends State<ViewPage> {
 
     return Scaffold(
       key: _scaffoldKey,
-      body: CustomScrollView(
-        cacheExtent: 10000.0, // キャッシュ領域を指定（単位はピクセル)
-        slivers: [
-          SliverAppBar(
-            title: const Text('チャット'),
-            floating: true,
-            pinned: true,
-            leading: Builder(
-              builder: (BuildContext context) {
-                return IconButton(
-                  icon: CircleAvatar(
-                    backgroundImage: CachedNetworkImageProvider(currentUser!.userImageUrl),
-                  ),
-                  onPressed: () {
-                    _scaffoldKey.currentState!.openDrawer();
-                  },
-                );
-              },
+      body: RefreshIndicator(
+        onRefresh: _onRefresh, // スワイプで呼び出される関数
+        displacement: 120.0, // SliverAppBar の高さを考慮して調整
+        child: CustomScrollView(
+          cacheExtent: 10000.0, // キャッシュ領域を指定（単位はピクセル)
+          slivers: [
+            SliverAppBar(
+              title: const Text('チャット'),
+              floating: true,
+              pinned: true,
+              leading: Builder(
+                builder: (BuildContext context) {
+                  return IconButton(
+                    icon: CircleAvatar(
+                      backgroundImage: CachedNetworkImageProvider(currentUser!.userImageUrl),
+                    ),
+                    onPressed: () {
+                      _scaffoldKey.currentState!.openDrawer();
+                    },
+                  );
+                },
+              ),
             ),
-          ),
-          SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final post = posts[index];
-                final created = Timestamp.fromMillisecondsSinceEpoch(post.createdAt * 1000);
-                return PostWidget(
-                    key: ValueKey(post.postId), // postIdをキーとして渡す
-                    post: post,
-                    created: created,
-                    likelist: likelist,
-                    );
-              },
-              childCount: posts.length,
-              addRepaintBoundaries: false,
-              
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final post = posts[index];
+                  final created = Timestamp.fromMillisecondsSinceEpoch(post.createdAt * 1000);
+                  return PostWidget(
+                      key: ValueKey(post.postId), // postIdをキーとして渡す
+                      post: post,
+                      created: created,
+                      likelist: likelist,
+                      );
+                },
+                childCount: posts.length,
+                addRepaintBoundaries: false,
+                
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),  
       drawer: Drawer(
         child: ListView(
