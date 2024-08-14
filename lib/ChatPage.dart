@@ -94,35 +94,33 @@ class _ChatPageState extends State<ChatPage> {
         children: [
           // uploadするボタン
           FloatingActionButton(
-            onPressed: () {
-              if ((_image != null) && (_text != "")) {
-                // ここでPostDataButtonをインスタンス化し、画像を渡す
-                PostDataButton().postData(_text,_image);
-                PostDataButton().upload(_image!);
-              }
-              if ((_image == null) && (_text != "")) {
-                PostDataButton().postData(_text,_image);
-                PostDataButton().upload(_image);
-              }
-              if ((_image != null) && (_text == "")) {
-                PostDataButton().postData(_text,_image);
-                PostDataButton().upload(_image!);
-              }
-              if ((_image == null) && (_text == "")) {
-                print("image is null");
-              }
+            heroTag: 'upload_button',
+            onPressed: () async {
+              try {
+                if (_image != null || _text.isNotEmpty) {
+                  await PostDataButton().postData(_text, _image);
+                  if (_image != null) {
+                    await PostDataButton().upload(_image!);
+                  }
+                } else {
+                  print("No image and no text provided.");
+                }
 
-              _controller.clear();
-
-              setState(() {
-                _image = null;
-                _text = "";
-              });
+                _controller.clear();
+                setState(() {
+                  _image = null;
+                  _text = "";
+                });
+                Navigator.pop(context);
+              } catch (e) {
+                print('Error during post or upload: $e');
+              }
             },
             child: Text('Upload'),
           ),
           // ギャラリーから取得するボタン
           FloatingActionButton(
+            heroTag: 'gallery_button',
             onPressed: getImageFromGallery,
             child: const Icon(Icons.photo_album),
           ),

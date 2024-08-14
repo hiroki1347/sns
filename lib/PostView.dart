@@ -1,39 +1,155 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'mypost.dart';
 import 'json_data.dart';
-//import 'json_upload.dart';
-//import 'package:firebase_core/firebase_core.dart';
-//import 'firebase_options.dart';
-//import 'main.dart';
 import 'post.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-//import 'my_page.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'user_post.dart';
+import 'dart:async';
+import 'likeusersPage.dart';
 
 //ポストの見た目
-class PostWidget extends StatelessWidget {
+class PostWidget extends StatefulWidget {
   const PostWidget({
-    super.key,
+    Key? key,
     required this.post,
     required this.created,
+    required this.likelist,
   });
 
   final Timestamp created;
   final Post post;
+  final List<Like> likelist;
+
+  @override
+  _PostWidgetState createState() => _PostWidgetState();
+}
+
+class _PostWidgetState extends State<PostWidget> with AutomaticKeepAliveClientMixin {
+  bool isLiked = false;
+  //Timer? timer;
+  late List<Like> likeusers;
+  int likeCount = 0;
+  bool isLoading =true;
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    //初期状態の「いいね」を取得
+    _initialize().then((_) {
+      if (mounted) { // mounted をチェック
+        setState(() {
+          isLoading = false;
+        });
+      }
+    });
+  }
+
+   @override
+  void dispose() {
+    //timer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _initialize() async {
+    isLiked = widget.likelist.any((like) => like.postId == widget.post.postId);
+
+      try {
+        likeusers = await LIKE().getLikenum(widget.post.postId);
+        likeCount = likeusers.length;
+        if (mounted) { // mounted をチェック
+          setState(() {});
+        }
+      } catch (e) {
+        // エラーハンドリング
+        print('Error loading like list: $e');
+      }
+    }
+
+  void toggleLike() async {
+    try {
+      String? userId = FirebaseAuth.instance.currentUser?.uid;
+
+      if (userId != null) {
+        setState(() {
+          isLiked = !isLiked;
+        });
+
+        if (isLiked) {
+          await LIKE().like(userId, widget.post.postId);
+        } else {
+          await LIKE().unlike(userId, widget.post.postId);
+        }
+        print("User: $userId, Post: ${widget.post.postId}, Liked: $isLiked");
+
+        // いいね数の再取得を追加
+        final updatedLikeUsers = await LIKE().getLikenum(widget.post.postId);
+        setState(() {
+          likeCount = updatedLikeUsers.length;
+        });
+      } else {
+        print("User not logged in.");
+      }
+    } catch (e) {
+      print("Error liking post: $e");
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+    
+    if (isLoading) {
+      return Center(child: CircularProgressIndicator()); // ローディング中のインジケーター
+    }
+
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start, //アイコンを上に揃える
         children: [
-          CircleAvatar(
-            backgroundImage: NetworkImage(
-              post.posterImageUrl,
+
+          InkWell(
+            onTap: () async {
+              //user_iconボタンを押した時の処理
+              String user_id = widget.post.posterId;
+              String my_id = FirebaseAuth.instance.currentUser!.uid;
+
+              // user_data_jsonを取得
+              User_inf user_data_json = await User_data().getUserdata(user_id);
+
+              //user_pageに遷移する
+              if (user_id == my_id) {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return MypostPage();
+                    },
+                  ),
+                );
+              } else {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return UserpostPage(user_data_json:user_data_json,);
+                    },
+                  ),
+                );
+              }
+            },
+            child: CircleAvatar(
+              backgroundImage: CachedNetworkImageProvider(widget.post.posterImageUrl),
             ),
           ),
+
           const SizedBox(width: 8),
+
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -42,15 +158,15 @@ class PostWidget extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      post.posterName,
+                      widget.post.posterName,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
                       ),
                     ),
                     Text(
-                     // toDate() で Timestamp から DateTime に変換できます。
-                      DateFormat('MM/dd HH:mm').format(created.toDate()),
+                      // toDate() で Timestamp から DateTime に変換できます。
+                      DateFormat('MM/dd HH:mm').format(widget.created.toDate()),
                       style: const TextStyle(fontSize: 10),
                     ),
                   ],
@@ -62,30 +178,47 @@ class PostWidget extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(4),
-                              color: FirebaseAuth.instance.currentUser!.uid == post.posterId
-                                  ? Colors.amber[100]
-                                  :Colors.blue[100],
+                          if (widget.post.text.isNotEmpty)
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(4),
+                                color: FirebaseAuth.instance.currentUser!.uid == widget.post.posterId
+                                    ? Colors.amber[100]
+                                    : Colors.blue[100],
+                              ),
+                              child: Text(
+                                widget.post.text,
+                                softWrap: true,
+                              ),
                             ),
-                            child: Text(
-                              post.text,
-                              softWrap: true,
+                          //画像を表示
+                          if (widget.post.imageName != "null")
+                            CachedNetworkImage(
+                              imageUrl: '${Url}/images/${widget.post.imageName}',
                             ),
+                          // いいねボタンを追加
+                          Row(
+                            children: [
+                              IconButton(
+                                icon: Icon(
+                                  Icons.thumb_up,
+                                  color: isLiked ? Colors.blue : Colors.grey,
+                                ),
+                                onPressed: toggleLike,
+                              ),
+                              Text(
+                                'いいね ${likeCount}', // 実際のいいね数を表示するためのロジックを追加してください
+                                style: TextStyle(color: Colors.black),
+                              ),
+                            ],
                           ),
-                        //画像を表示
-                        if(post.imageName != "null") 
-                        CachedNetworkImage(
-                          imageUrl: 'http://192.168.0.200:3000/images/${post.imageName}'
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
                     //自分のpost
                     //編集
-                    if (FirebaseAuth.instance.currentUser!.uid == post.posterId)
+                    if (FirebaseAuth.instance.currentUser!.uid == widget.post.posterId)
                       PopupMenuButton<String>(
                         onSelected: (value) {
                           if (value == 'edit') {
@@ -94,11 +227,11 @@ class PostWidget extends StatelessWidget {
                               builder: (context) {
                                 return AlertDialog(
                                   content: TextFormField(
-                                    initialValue: post.text,
+                                    initialValue: widget.post.text,
                                     autofocus: true,
                                     onFieldSubmitted: (newText) {
                                       //post.text　post.postidを用いて編集する
-                                      UPDATE().update(newText, post.postId);
+                                      UPDATE().update(newText, widget.post.postId);
                                       Navigator.of(context).pop();
                                     },
                                   ),
@@ -107,7 +240,7 @@ class PostWidget extends StatelessWidget {
                             );
                           } else if (value == 'delete') {
                             showDialog(
-                              context: context, 
+                              context: context,
                               builder: (context) {
                                 return AlertDialog(
                                   title: const Text('Delete'),
@@ -122,7 +255,7 @@ class PostWidget extends StatelessWidget {
                                     TextButton(
                                       onPressed: () {
                                         //post.postidを用いて削除する関数を入れる
-                                        DELETE().delete(post.postId);
+                                        DELETE().delete(widget.post.postId);
                                         Navigator.of(context).pop();
                                       },
                                       child: const Text('Delete'),
@@ -130,7 +263,14 @@ class PostWidget extends StatelessWidget {
                                   ],
                                 );
                               },
-                            );        
+                            );
+                          } else if (value == 'いいね') {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => LikeUsersPage(likeusers: likeusers),
+                              ),
+                            );
                           }
                         },
                         itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
@@ -142,16 +282,19 @@ class PostWidget extends StatelessWidget {
                             value: 'delete',
                             child: Text('Delete'),
                           ),
+                          const PopupMenuItem<String>(
+                            value: 'いいね',
+                            child: Text('いいね'),
+                          ),
                         ],
                       ),
-
                     //他人のpost
-                    if (FirebaseAuth.instance.currentUser!.uid != post.posterId)
+                    if (FirebaseAuth.instance.currentUser!.uid != widget.post.posterId)
                       PopupMenuButton<String>(
                         onSelected: (value) {
                           if (value == 'no action') {
                             showDialog(
-                              context: context, 
+                              context: context,
                               builder: (context) {
                                 return AlertDialog(
                                   title: const Text('No action'),
@@ -172,7 +315,7 @@ class PostWidget extends StatelessWidget {
                                   ],
                                 );
                               },
-                            );        
+                            );
                           }
                         },
                         itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
@@ -184,7 +327,7 @@ class PostWidget extends StatelessWidget {
                       ),
                   ],
                 ),
-              ],   
+              ],
             ),
           ),
         ],

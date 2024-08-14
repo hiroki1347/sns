@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-//import 'json_upload.dart';
-//import 'package:firebase_core/firebase_core.dart';
-//import 'firebase_options.dart';
+import 'follow.dart';
+import 'mypost.dart';
 import 'post.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'my_page.dart';
-//import 'package:intl/intl.dart';
+import 'settingpage.dart';
 import 'PostView.dart';
-//import 'main.dart';
 import 'ChatPage.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'dart:async';
+import 'json_data.dart';
+import 'likeposts.dart';
+import 'followerPage.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
-//タイムラインの構造
 class ViewPage extends StatefulWidget {
   const ViewPage({super.key});
 
@@ -23,42 +23,52 @@ class ViewPage extends StatefulWidget {
 }
 
 class _ViewPageState extends State<ViewPage> {
-
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final controller = TextEditingController();
-  final ScrollController scrollController = ScrollController();
   List<Post> posts = [];
-  Timer? timer;
+  List<Like> likelist = [];
+  late User_inf currentUser;
+  //Timer? timer;
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
     fetchPosts();
-    startPolling();
+    _initialize().then((_) {
+      if (mounted) { // mounted をチェック
+        setState(() {
+          isLoading = false;
+        });
+      }
+    });
+    //startPolling();
   }
 
-  void startPolling() {
-    timer = Timer.periodic(Duration(seconds: 5), (timer) {
-      fetchPosts();
-    });
-  }
-  /// この dispose 関数はこのWidgetが使われなくなったときに実行されます。
+  // void startPolling() {
+  //   timer = Timer.periodic(Duration(seconds: 5), (timer) {
+  //     fetchPosts();
+  //   });
+  // }
+
   @override
   void dispose() {
-    // TextEditingController は使われなくなったら必ず dispose する必要があります。
     controller.dispose();
-    scrollController.dispose();
-    timer?.cancel();
+    //timer?.cancel();
     super.dispose();
   }
+
   Future<void> fetchPosts() async {
     try {
-      final response = await http.get(Uri.parse('http://192.168.0.200:3000/data'));
+      final response = await http.get(Uri.parse('${Url}/data'));
       if (response.statusCode == 200) {
         List<dynamic> jsonList = jsonDecode(response.body);
         List<Post> fetchedPosts = jsonList.map((json) => Post.fromJson(json)).toList();
-        setState(() {
-          posts = fetchedPosts.reversed.toList(); // リストを逆順にして設定
-        });
+        if (mounted) { // mounted をチェック
+          setState(() {
+            posts = fetchedPosts.reversed.toList(); // リストを逆順にして設定
+          });
+        }
       } else {
         print('Failed to load data with status code: ${response.statusCode}');
         throw Exception('Failed to load data');
@@ -67,63 +77,163 @@ class _ViewPageState extends State<ViewPage> {
       print('Error occurred: $e');
     }
   }
+
+  Future<void> _initialize() async {
+    try {
+      // fetchLikedPosts 関数を呼び出して likelist を取得
+      likelist = await LIKE().fetchLikedPosts(FirebaseAuth.instance.currentUser!.uid);
+      currentUser = await User_data().getUserdata(FirebaseAuth.instance.currentUser!.uid);
+
+      if (mounted) { // mounted をチェック
+      setState(() {});
+    }
+    } catch (e) {
+      // エラーハンドリング
+      print('Error loading follow list: $e');
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        primaryFocus?.unfocus();
-      },
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('チャット'),
-          actions: [
-            // tap 可能にするために InkWell を使います。
-            InkWell(
+
+    if (isLoading) {
+      return Scaffold(
+        body: Center(child: CircularProgressIndicator()), // ローディングインジケーター
+      );
+    }
+
+    return Scaffold(
+      key: _scaffoldKey,
+      body: CustomScrollView(
+        cacheExtent: 10000.0, // キャッシュ領域を指定（単位はピクセル)
+        slivers: [
+          SliverAppBar(
+            title: const Text('チャット'),
+            floating: true,
+            pinned: true,
+            leading: Builder(
+              builder: (BuildContext context) {
+                return IconButton(
+                  icon: CircleAvatar(
+                    backgroundImage: CachedNetworkImageProvider(currentUser.userImageUrl),
+                  ),
+                  onPressed: () {
+                    _scaffoldKey.currentState!.openDrawer();
+                  },
+                );
+              },
+            ),
+          ),
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final post = posts[index];
+                final created = Timestamp.fromMillisecondsSinceEpoch(post.createdAt * 1000);
+                return PostWidget(
+                    key: ValueKey(post.postId), // postIdをキーとして渡す
+                    post: post,
+                    created: created,
+                    likelist: likelist,
+                    );
+              },
+              childCount: posts.length,
+              addRepaintBoundaries: false,
+              
+            ),
+          ),
+        ],
+      ),  
+      drawer: Drawer(
+        child: ListView(
+          children: <Widget>[
+            DrawerHeader(
+              child: Column(
+                children: [
+                  CircleAvatar(
+                    radius: 20.0,
+                    backgroundImage: NetworkImage(currentUser.userImageUrl),
+                  ),
+                  SizedBox(height: 10.0),
+                  Text('${currentUser.user_name}'),
+                ],
+              ),
+              decoration: BoxDecoration(
+              ),
+            ),
+            ListTile(
+              title: Text('プロフィール'),
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (context) {
-                      return const MyPage();
+                      return const MypostPage();
                     },
                   ),
                 );
               },
-              child: CircleAvatar(
-                backgroundImage: NetworkImage(
-                  FirebaseAuth.instance.currentUser!.photoURL!,
-                ),
-              ),
-            )
-          ],
-        ),
-        body: Column(
-          children: [
-            Expanded(
-              child: ListView.builder(
-                controller: scrollController,
-                //reverse: true, // リストを逆順に表示
-                itemCount: posts.length,
-                itemBuilder: (context, index) {
-                  final post = posts[index];
-                  final created = Timestamp.fromMillisecondsSinceEpoch(post.createdAt * 1000);
-                  return PostWidget(post: post,created: created); // PostWidget をそのまま使用
-                },
-              ),
+            ),
+            ListTile(
+              title: Text('フォロー中'),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return const FollowingPage();
+                    },
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              title: Text('フォロワー'),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return const FollowerPage();
+                    },
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              title: Text('いいね'),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return const LikePostPage();
+                    },
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              title: Text('設定'),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return const settingPage();
+                    },
+                  ),
+                );
+              },
             ),
           ],
         ),
-        floatingActionButton: FloatingActionButton(
-          child: Icon(Icons.add),
-          onPressed: () async {
-          // 投稿画面に遷移
-            await Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) {
-                return ChatPage();
-              }),
-            );
-            fetchPosts();
-          },
-        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.add),
+        onPressed: () async {
+          await Navigator.of(context).push(
+            MaterialPageRoute(builder: (context) {
+              return ChatPage();
+            }),
+          );
+          fetchPosts();
+        },
       ),
     );
   }
