@@ -7,6 +7,7 @@ import 'ViewPage.dart';
 //import 'post.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 //import 'package:cloud_firestore/cloud_firestore.dart';
+import 'json_data.dart';
 void main() async{
   // 最初に表示するWidget
   WidgetsFlutterBinding.ensureInitialized();
@@ -74,77 +75,6 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              // メールアドレス入力
-              TextFormField(
-                decoration: InputDecoration(labelText: 'メールアドレス'),
-                onChanged: (String value) {
-                  setState(() {
-                    email = value;
-                  });
-                },
-              ),
-              // パスワード入力
-              TextFormField(
-                decoration: InputDecoration(labelText: 'パスワード'),
-                obscureText: true,
-                onChanged: (String value) {
-                  setState(() {
-                    password = value;
-                  });
-                },
-              ),
-              Container(
-                padding: EdgeInsets.all(8),
-                // メッセージ表示
-                child: Text(infoText),
-              ),
-              Container(
-                width: double.infinity,
-                // ユーザー登録ボタン
-                child: ElevatedButton(
-                  child: Text('ユーザー登録'),
-                  onPressed: () async {
-                    try {
-                      // ユーザー登録に成功した場合
-                      // チャット画面に遷移＋ログイン画面を破棄
-                      await Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(builder: (context) {
-                          return ViewPage();
-                        }),
-                      );
-                    } catch (e) {
-                      // ユーザー登録に失敗した場合
-                      setState(() {
-                        infoText = "登録に失敗しました：${e.toString()}";
-                      });
-                    }
-                  },
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                width: double.infinity,
-                // ログイン登録ボタン
-                child: OutlinedButton(
-                  child: Text('ログイン'),
-                  onPressed: () async {
-                    try {
-                      // ログインに成功した場合
-                      // チャット画面に遷移＋ログイン画面を破棄
-                      await Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(builder: (context) {
-                          return ViewPage();
-                        }),
-                      );
-                    } catch (e) {
-                      // ログインに失敗した場合
-                      setState(() {
-                        infoText = "ログインに失敗しました：${e.toString()}";
-                      });
-                    }
-                  },
-                ),
-              ),
               Container(
                 child: ElevatedButton(
                   child: const Text('GoogleSignIn'),
@@ -153,16 +83,27 @@ class _LoginPageState extends State<LoginPage> {
                     // ログインが成功すると FirebaseAuth.instance.currentUser にログイン中のユーザーの情報が入ります
                     print(FirebaseAuth.instance.currentUser?.displayName);
 
-                     // ログインに成功したら ViewPage に遷移します。
-                     // 前のページに戻らせないようにするにはpushAndRemoveUntilを使います。
-                    if (mounted) {
-                      Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute(builder: (context) {
-                          return ViewPage();
-                        }),
-                        (route) => false,
-                      );
-                    }
+                    final user = FirebaseAuth.instance.currentUser;
+                    if (user != null) {
+                      // ユーザーのUIDを使用してサーバーに問い合わせ
+                      final bool isUserRegistered = await User_data().checkUserExists(user.uid);
+
+                      if (!isUserRegistered) {
+                        // ユーザーが未登録の場合にデータをサーバーに送信
+                        await User_data().firstuserdata();
+                      }
+
+                      // ログインに成功したら ViewPage に遷移します。
+                      // 前のページに戻らせないようにするにはpushAndRemoveUntilを使います。
+                      if (mounted) {
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(builder: (context) {
+                            return ViewPage();
+                          }),
+                          (route) => false,
+                        );
+                      }
+                    } 
                   },
                 ),
               ),
