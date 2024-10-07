@@ -52,6 +52,7 @@ class _ViewPageState extends State<ViewPage> {
   // }
   Future<void> _onRefresh() async {
     await fetchPosts(); // 投稿を再取得
+    setState(() {});
   }
 
   @override
