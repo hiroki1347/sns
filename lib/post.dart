@@ -1,5 +1,4 @@
-String Url = "http://192.168.0.200:3000";
-// String Url = "https://c045-106-184-155-122.ngrok-free.app";
+String Url = "http://localhost:3000";
 
 class Post {
   final int createdAt;
