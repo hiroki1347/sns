@@ -29,7 +29,6 @@ class PostWidget extends StatefulWidget {
 
 class _PostWidgetState extends State<PostWidget> with AutomaticKeepAliveClientMixin {
   bool isLiked = false;
-  //Timer? timer;
   late List<Like> likeusers;
   int likeCount = 0;
   bool isLoading =true;
@@ -50,9 +49,9 @@ class _PostWidgetState extends State<PostWidget> with AutomaticKeepAliveClientMi
     });
   }
 
+
    @override
   void dispose() {
-    //timer?.cancel();
     super.dispose();
   }
 
@@ -70,6 +69,14 @@ class _PostWidgetState extends State<PostWidget> with AutomaticKeepAliveClientMi
         print('Error loading like list: $e');
       }
     }
+
+  @override
+  void didUpdateWidget(PostWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.post.postId != oldWidget.post.postId) {
+      _initialize(); // 新しいポストデータに基づいて再初期化
+    }
+  }
 
   void toggleLike() async {
     try {
